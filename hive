@@ -1,0 +1,151 @@
+create table tran(
+Txn_dt String,
+Custno String,
+Age String,
+Zipcode String,
+Category String,
+Product String,
+Qty Int,
+Cost bigint,
+Sales bigint)
+Row format delimited
+Fields terminated by '\;'
+
+
+LOAD DATA LOCAL INPATH 'cdac/D02' OVERWRITE INTO TABLE tran;
+LOAD DATA LOCAL INPATH 'cdac/D01' INTO TABLE tran;
+LOAD DATA LOCAL INPATH 'cdac/D11' INTO TABLE tran;
+LOAD DATA LOCAL INPATH 'cdac/D12' INTO TABLE tran;
+
+Q1.) Count of unique customers and total sales for each age group and for a given month = Jan
+
+Hint : where month(txn_dt) = 1
+
+A	5000		600000
+B	4500		540000
+
+ANS ) select age, count(distinct(custno)), 
+sum(sales) from tran where month(txn_dt)=1 group by age;
+
+A       686     908494                                                                                                                                                                                             
+B       1489    2565452                                                                                                                                                                                            
+C       2922    5358113                                                                                                                                                                                            
+D       3346    6694313                                                                                                                                                                                            
+E       2691    5521770                                                                                                                                                                                            
+F       2031    3797484                                                                                                                                                                                            
+G       1229    2135538                                                                                                                                                                                            
+H       594     1040837                                                                                                                                                                                            
+I       506     938571                                                                                                                                                                                             
+J       769     955095                                                                                                                                                                                             
+K       315     772812 
+
+
+
+2) Count of unique customers and total sales for one age group(A) for all products - 
+[ sort data on totalsales desc- find top 10]
+
+	ProdA	count of unique cust	total sales
+	ProdB	‘’					‘’
+
+Hint : where trim(age)  = 'A'
+
+Ans) 
+
+select product,count(distinct(custno)),sum(sales) as total 
+from tran where trim(age)  = 'A'
+group by product 
+order by total desc limit 10;
+
+4711588210441   3       446185                                                                                                                                                                                     
+8712045008539   15      38521                                                                                                                                                                                      
+4710036008562   18      16137                                                                                                                                                                                      
+4710036003581   58      15843                                                                                                                                                                                      
+4718387034025   3       15178                                                                                                                                                                                      
+4710628119010   4       14997                                                                                                                                                                                      
+4710265849066   65      14440                                                                                                                                                                                      
+20553418        4       14360                                                                                                                                                                                      
+4710114128038   53      14114                                                                                                                                                                                      
+4973167032060   8       13702  
+
+
+
+
+
+
+3) Area wise sales   
+
+select zipcode, sum(sales) from tran group by zipcode;
+A       2344440                                                                                                                                                                                                    
+B       2799090                                                                                                                                                                                                    
+C       9866326                                                                                                                                                                                                    
+D       5447881                                                                                                                                                                                                    
+E       37994770                                                                                                                                                                                                   
+F       31548341                                                                                                                                                                                                   
+G       12593633                                                                                                                                                                                                   
+H       5245595 
+
+4) find top 10 viable products (prod which give highest profit)
+
+select product, sum(sales-cost) as profit from tran group by product order by profit
+desc limit 10;
+
+4909978112950   71312                                                                                                                                                                                              
+8712045008539   46586                                                                                                                                                                                              
+20564100        38699                                                                                                                                                                                              
+4710628131012   34429                                                                                                                                                                                              
+0729238191921   33645                                                                                                                                                                                              
+4902430493437   32970                                                                                                                                                                                              
+20556433        31862                                                                                                                                                                                              
+4901422038939   31616                                                                                                                                                                                              
+4710114128038   29168                                                                                                                                                                                              
+7610053910787   26839      
+
+select product, sum((sales-cost)*qty) as profit from tran group by product order by profit
+desc limit 10;
+
+4711588210441   9611316                                                                                                                                                                                            
+8712045008539   1642911                                                                                                                                                                                            
+8712045000151   1459858                                                                                                                                                                                            
+8712045011317   1041208                                                                                                                                                                                            
+4710628119010   1035613                                                                                                                                                                                            
+4710628131012   964098                                                                                                                                                                                             
+4710114362029   624868                                                                                                                                                                                             
+0300086780026   580123                                                                                                                                                                                             
+4710421090059   561918                                                                                                                                                                                             
+7610053910787   470988                                                                                                                                                                                             
+Time taken: 70.63 seconds, Fetched: 10 row(s) 
+
+5) find all loss making products – Display all the loss making products from highest loss to the least
+
+
+select product, sum(sales-cost) as loss from tran 
+group by product order by profit limit 10;
+
+4714981010038   -131002                                                                                                                                                                                            
+4711271000014   -46213                                                                                                                                                                                             
+4719090900065   -44331                                                                                                                                                                                             
+4710265849066   -38969                                                                                                                                                                                             
+4712425010712   -17646                                                                                                                                                                                             
+2110119000377   -17457                                                                                                                                                                                             
+4710908110232   -15072                                                                                                                                                                                             
+4719090900058   -14034                                                                                                                                                                                             
+4710265847666   -11657                                                                                                                                                                                             
+4710683100015   -11456  
+
+select product, sum((sales-cost)*qty) as loss from tran 
+group by product order by loss
+limit 10;
+
+4714981010038   -257765                                                                                                                                                                                            
+4710114128038   -154391                                                                                                                                                                                            
+4711271000014   -88780                                                                                                                                                                                             
+4710265849066   -59629                                                                                                                                                                                             
+4719090900065   -44216                                                                                                                                                                                             
+0037000922919   -36228                                                                                                                                                                                             
+4712425010712   -34444                                                                                                                                                                                             
+4710908110232   -29104                                                                                                                                                                                             
+4719090900058   -25667                                                                                                                                                                                             
+4714008033507   -24821    
+
+
+Total number records  : 817741 records
